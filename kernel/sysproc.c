@@ -110,8 +110,17 @@ sys_uptime(void)
 uint64 sys_interpose()
 {
   int arg0;
+  char *arg1 = myproc()->allowed_path;
 
+  // mask
   argint(0, &arg0);
+
+  // allowed_path (wrote it directly to struct)
+  if (argstr(1, arg1, MAXPATH) == -1)
+  {
+    return(-1);
+  }
+
   myproc()->mask = arg0;
   
   return(0);

@@ -107,4 +107,6 @@ struct proc {
 
   // for interpose
   uint64 mask;
+  char allowed_path[MAXPATH];
+
 };
