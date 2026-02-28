@@ -146,13 +146,14 @@ found:
   p->context.ra = (uint64)forkret;
   p->context.sp = p->kstack + PGSIZE;
 
-
   // Sets mask value to not be a random int
   // (for SYS_interpose)
   p->mask = 0;
 
-  // printf("alloc proc debug@: %d %s %ld\n", p->pid, p->name, p->mask);
-  return p;
+  // Zero the allowed_path to not have random values
+  memset(p->allowed_path, 0, MAXPATH);
+
+  return (p);
 }
 
 // free a proc structure and the data hanging from it,

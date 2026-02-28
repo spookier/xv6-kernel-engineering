@@ -132,21 +132,39 @@ static uint64 (*syscalls[])(void) = {
 
 void syscall(void)
 {
+  struct proc *p = myproc();
   int num;
   int reject;
 
-  struct proc *p = myproc();
+  char user_argpath[MAXPATH];
 
   num = p->trapframe->a7; // syscall id (which syscall to call)
   reject = p->mask;
-  
+
   if (num > 0 && num < NELEM(syscalls) && syscalls[num])
   {
-    if ((reject & (1 << num)) != 0)
+    if ((reject & (1 << num)) != 0) // Check mask to reject syscall
     {
-      // bit n is set (1)
-      // printf("@debug: %s %d %lu\n", p->name, num, p->mask);
-      // printf("SYSCALL REJECTED\n");
+      // If here, bit n is set (1), it has a mask
+
+      if (num == SYS_exec || num == SYS_open)
+      {
+        // Put exec || open first argv in user_argpath
+        if(argstr(0, user_argpath, MAXPATH) == -1)
+        {
+          p->trapframe->a0 = -1;
+          return ;
+        }
+
+        // Check if the syscall has an allowed pathname
+        if (strncmp(user_argpath, myproc()->allowed_path, MAXPATH) == 0)
+        {
+          p->trapframe->a0 = syscalls[num]();
+          return ;
+        }
+      }
+      
+      // Rejet the syscall (mask is set)
       p->trapframe->a0 = -1;
       return ;
     }
@@ -160,7 +178,7 @@ void syscall(void)
   else
   {
     printf("%d %s: unknown sys call %d\n",
-            p->pid, p->name, num);
+        p->pid, p->name, num);
     p->trapframe->a0 = -1;
   }
 }
