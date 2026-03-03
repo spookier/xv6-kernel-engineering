@@ -1,0 +1,13 @@
+CompileFlags:
+  Add:
+    - -std=gnu11
+    - -Wno-main
+    - -Wno-incompatible-library-redeclaration
+    - -Wno-builtin-requires-header
+    - -fno-builtin
+    - -I.
+    - -I..
+    - -Ikernel
+    - -I../kernel
+    - -Iuser
+    - -I../user
