@@ -140,11 +140,62 @@ walkaddr(pagetable_t pagetable, uint64 va)
   return pa;
 }
 
+/*
+ There's 3 levels to the PTE:
+ pagetable          = root table (level 2)
+ pagetable[i]       = level 2 entry → points to level 1 table
+ level1[j]          = level 1 entry → points to level 0 table
+ level0[k]          = level 0 entry → points to real memory
+
+ [ 9 bits i | 9 bits j | 9 bits y | 12 bits offset ]
+
+ i=1  → 000000001 000000000 000000000 000000000000
+ j=3  → 000000000 000000011 000000000 000000000000
+ y=5  → 000000000 000000000 000000101 000000000000
+
+ combined → 000000001 000000011 000000101 000000000000
+*/
+
 
 #if defined(LAB_PGTBL) || defined(SOL_MMAP) || defined(SOL_COW)
 void
-vmprint(pagetable_t pagetable) {
-  // your code here
+vmprint(pagetable_t pagetable)
+{
+	pagetable_t level1 = 0;
+	pagetable_t level0 = 0;
+	uint64 va;
+	
+	printf("pagetable %p\n", (void *)pagetable);
+	for (int i = 0; i < 512; ++i)
+	{
+		if ((pagetable[i] & PTE_V) != 0)
+		{
+			va = (uint64)i << 30;
+			printf("..%p: pte %p pa %p\n", (void *)va, (void *)pagetable[i], (void *)PTE2PA(pagetable[i]));
+
+			level1 = (pagetable_t)PTE2PA(pagetable[i]);
+			for (int j = 0; j < 512; ++j)
+			{
+
+				if ((level1[j] & PTE_V) != 0)
+				{
+					va = (uint64)i << 30 | (uint64)j << 21;
+					printf(".. ..%p: pte %p pa %p\n", (void *)va, (void *)level1[j], (void *)PTE2PA(level1[j]));
+					
+					level0 = (pagetable_t)PTE2PA(level1[j]);
+					for (int y = 0; y < 512; ++y)
+					{
+
+						if((level0[y] & PTE_V) != 0)
+						{
+							va = (uint64)i << 30 | (uint64)j << 21 | (uint64)y << 12;
+							printf(".. .. ..%p: pte %p pa %p\n", (void *)va, (void *)level0[y], (void *)PTE2PA(level0[y]));
+						}
+					}
+				}
+			}
+		}
+	}
 }
 #endif
 
