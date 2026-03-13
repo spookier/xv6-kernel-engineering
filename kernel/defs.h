@@ -66,6 +66,12 @@ void            ireclaim(int);
 void*           kalloc(void);
 void            kfree(void *);
 void            kinit(void);
+// SUPERPAGE
+void            *superalloc(void);
+void            superfree(void *pa);
+void            superfreerange(void *pa_start, void *pa_end);
+void            superinit(void);
+
 
 // log.c
 void            initlog(int, struct superblock*);
